@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.gxp.infrastructure.mapper.ItemMapper">
+    <select id="fetchSkills" resultMap="skill">
+        select * from skill
+    </select>
+
+    <resultMap id="skill" type="jp.co.gxp.domain.SkillEntity">
+        <id property="skillId" column="skill_id"/>
+        <result property="skillName" column="skill_name"/>
+    </resultMap>
+</mapper>

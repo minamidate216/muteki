@@ -1,0 +1,312 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.gxp.infrastructure.mapper.JobMapper">
+    <sql id="select">
+        j.job_id,
+        j.job_name,
+        j.company_name,
+        j.japanese_level,
+        j.min_salary,
+        j.max_salary,
+        j.location,
+        j.tag1,
+        j.tag2,
+        j.tag3
+    </sql>
+    <select id="fetchJobsAll" resultMap="Jobs">
+        SELECT
+            <include refid="select"/>
+        FROM job j
+    </select>
+    <select id="calculateForeignRatioById" resultMap="ForeignRatio">
+        SELECT
+            ratio_id,
+            job_id,
+            country,
+            CASE
+            WHEN COALESCE(total_employee, 0) != 0 THEN COALESCE(country_employee, 0) / NULLIF(COALESCE(total_employee, 0), 0)::float
+            ELSE 0
+            END AS foreign_ratio
+        FROM
+            foreign_ratio
+        WHERE job_id = #{jobId}
+            AND total_employee IS NOT NULL
+    </select>
+<!--求人詳細-->
+    <select id="fetchJobDetailByJobId" resultMap="JobDetail">
+        SELECT
+            job_detail_id,
+            job_id,
+            benefits,
+            work_description,
+            work_hours,
+            work_requirements,
+            work_welcome,
+            work_trial_time,
+            work_year_salary,
+            work_good_points,
+            work_need_person,
+            work_environment
+        FROM job_detail
+        WHERE job_id = #{jobId}
+    </select>
+<!--    企業画像-->
+    <select id="fetchJobImgByJobDetailId" resultMap="JobImg">
+        SELECT
+            job_img_id,
+            job_img,
+            job_detail_id
+        FROM company_img
+        WHERE job_detail_id = #{jobDetailId}
+    </select>
+<!--    業界＋会社ロゴ-->
+    <select id="fetchCompanyJobByJobId" resultMap="CompanyJob">
+        SELECT
+        j.job_id,
+        j.job_name,
+        c.company_name,
+        j.japanese_level,
+        j.min_salary,
+        j.max_salary,
+        j.location,
+        j.tag1,
+        j.tag2,
+        j.tag3,
+        i.industry_name,
+        c.company_logo
+        FROM
+        job j 
+        INNER JOIN industry i ON j.industry_id = i.industry_id
+        INNER JOIN company c ON c.company_id = j.company_id
+        WHERE
+            j.job_id = #{jobId}
+    </select>
+<!--    スキルリスト-->
+    <select id="fetchSkillByJobId" resultMap="Skill">
+        SELECT
+            s.skill_id,
+            s.skill_name
+        FROM skill_job sj
+        INNER JOIN skill s
+        ON s.skill_id = sj.skill_id
+        WHERE sj.job_id = #{jobId}
+    </select>
+<!--    jobのリストをサイドバーでチェックしたパラメータで検索-->
+    <select id="fetchJobByCheckBoxes" resultMap="Jobs">
+        SELECT DISTINCT
+        <include refid="select"/>
+        FROM job j
+        INNER JOIN skill_job sj ON j.job_id = sj.job_id
+        INNER JOIN skill s ON s.skill_id = sj.skill_id
+        <if test="selectedJobNames != null and selectedJobNames.size() > 0">
+            WHERE
+            j.job_name IN
+            <foreach item="selectedJobName" index="index" collection="selectedJobNames" open="(" separator="," close=")">
+                #{selectedJobName}
+            </foreach>
+        </if>
+        <if test="selectedSkills != null and selectedSkills.size() > 0">
+            AND
+            s.skill_name IN
+            <foreach item="selectedSkill" index="index" collection="selectedSkills" open="(" separator="," close=")">
+                #{selectedSkill}
+            </foreach>
+        </if>
+        <if test="selectedJapaneseLevel != null and selectedJapaneseLevel>0">
+            AND
+            j.japanese_level >= #{selectedJapaneseLevel}
+        </if>
+        <if test="selectedLocations != null and selectedLocations.size() > 0">
+            AND
+            j.location IN
+            <foreach item="selectedLocation" index="index" collection="selectedLocations" open="(" separator="," close=")">
+                #{selectedLocation}
+            </foreach>
+        </if>
+        <if test="selectedSalary != null and selectedSalary > 0">
+            AND  j.max_salary >=
+                #{selectedSalary} / 12
+        </if>
+    </select>
+    <!--    jobのリストを詳細検索でチェックしたパラメータで検索-->
+    <select id="fetchJobByMoreCheckBoxes" resultMap="Jobs">
+        SELECT DISTINCT
+        <include refid="select"/>
+        FROM job j
+        INNER JOIN skill_job sj ON j.job_id = sj.job_id
+        INNER JOIN skill s ON s.skill_id = sj.skill_id
+        INNER JOIN job_detail jd ON j.job_id = jd.job_id
+        INNER JOIN industry i ON i.industry_id = j.industry_id
+        INNER JOIN foreign_ratio fr ON fr.job_id = j.job_id
+        <if test="selectedForeignRatio != null and selectedForeignRatio > 0">
+            INNER JOIN (
+            SELECT
+            job_id,
+            SUM(COALESCE(country_employee, 0))::float / NULLIF(COALESCE(total_employee, 0), 0)::float AS foreign_ratio
+            FROM foreign_ratio fr2
+            GROUP BY job_id,total_employee
+            ) fr2 ON j.job_id = fr2.job_id
+            WHERE fr2.foreign_ratio > #{selectedForeignRatio}
+        </if>
+        <if test="selectedJobNames != null and selectedJobNames.size() > 0">
+            AND
+            j.job_name IN
+            <foreach item="selectedJobName" index="index" collection="selectedJobNames" open="(" separator="," close=")">
+                #{selectedJobName}
+            </foreach>
+        </if>
+        <if test="selectedSkills != null and selectedSkills.size() > 0">
+            AND
+            s.skill_name IN
+            <foreach item="selectedSkill" index="index" collection="selectedSkills" open="(" separator="," close=")">
+                #{selectedSkill}
+            </foreach>
+        </if>
+        <if test="selectedJapaneseLevel != null and selectedJapaneseLevel > 0">
+            AND
+            j.japanese_level &lt;= #{selectedJapaneseLevel}
+        </if>
+        <if test="selectedLocations != null and selectedLocations.size() > 0">
+            AND
+            j.location IN
+            <foreach item="selectedLocation" index="index" collection="selectedLocations" open="(" separator="," close=")">
+                #{selectedLocation}
+            </foreach>
+        </if>
+        <if test="selectedSalary != null and selectedSalary > 0">
+            AND  j.max_salary >=
+            #{selectedSalary} / 12
+        </if>
+        <if test="selectedIndustries != null and selectedIndustries.size() > 0">
+            AND
+            i.industry_name IN
+        <foreach item="selectedIndustry" index="index" collection="selectedIndustries" open="(" separator="," close=")">
+            #{selectedIndustry}
+        </foreach>
+        </if>
+        <if test="selectedWorkExperienceMin != null and selectedWorkExperienceMin > 0">
+            AND
+            jd.work_experience >= #{selectedWorkExperienceMin}
+        </if>
+        <if test="selectedWorkExperienceMax != null  and selectedWorkExperienceMax > 0">
+            AND
+            jd.work_experience &lt;= #{selectedWorkExperienceMax}
+        </if>
+        <if test="selectedEmployeeNumMin != null and selectedEmployeeNumMin > 0">
+            AND
+            fr.total_employee >= #{selectedEmployeeNumMin}
+        </if>
+        <if test="selectedEmployeeNumMax != null and selectedEmployeeNumMax > 0">
+            AND
+            fr.total_employee &lt;= #{selectedEmployeeNumMax}
+        </if>
+        <if test="selectedForeignCountries != null and selectedForeignCountries.size() > 0">
+            AND
+            fr.country IN
+            <foreach item="selectedForeignCountry" index="index" collection="selectedForeignCountries" open="(" separator="," close=")">
+                #{selectedForeignCountry}
+            </foreach>
+        </if>
+<!--
+        バグがあるため、一旦benefitsだけ検索します（足りると思います）
+        y.yang
+        2024.6.26
+-->
+<!--        <if test="selectedPickyAbout != null">-->
+<!--            AND j.job_id IN-->
+<!--            <foreach item="selectedPickyAbout1" index="index" collection="selectedPickyAbout" open="(" separator=" UNION " close=")">-->
+<!--                (SELECT job_id-->
+<!--                FROM job_detail-->
+<!--                WHERE benefits LIKE '%#{selectedPickyAbout1}%'-->
+<!--                OR work_description LIKE '%#{selectedPickyAbout1}%'-->
+<!--                OR work_hours LIKE '%#{selectedPickyAbout1}%'-->
+<!--                OR work_requirements LIKE '%#{selectedPickyAbout1}%'-->
+<!--                OR work_welcome LIKE '%#{selectedPickyAbout1}%'-->
+<!--                OR work_trial_time LIKE '%#{selectedPickyAbout1}%'-->
+<!--                OR work_year_salary LIKE '%#{selectedPickyAbout1}%'-->
+<!--                OR work_good_points LIKE '%#{selectedPickyAbout1}%'-->
+<!--                OR work_need_person LIKE '%#{selectedPickyAbout1}%'-->
+<!--                OR work_environment LIKE '%#{selectedPickyAbout1}%'-->
+<!--                )-->
+<!--            </foreach>-->
+        <if test="selectedPickyAbout != null and selectedPickyAbout.size() > 0">
+            AND (
+            <foreach item="selectedPickyAbout1" index="index" collection="selectedPickyAbout" separator=" OR ">
+                jd.benefits LIKE CONCAT('%', #{selectedPickyAbout1}, '%')
+            </foreach>
+            )
+        </if>
+    </select>
+    <select id="fetchLikedJobIdsByUserId" resultType="integer">
+        SELECT DISTINCT j.job_id
+        FROM users u
+        INNER JOIN user_job_like ujl on u.user_id=ujl.user_id
+        INNER JOIN job j on j.job_id=ujl.job_id
+        WHERE u.user_id=#{userId}
+    </select>
+    <insert id="jobLikePost" >
+        INSERT INTO user_job_like(user_id, job_id)
+        values (#{userId},#{jobId})
+    </insert>
+    <!--求人お気に入り削除-->
+    <delete id="jobLikeDelete">
+        DELETE FROM user_job_like
+        WHERE user_id=#{userId} AND job_id=#{jobId}
+    </delete>
+    <resultMap id="Jobs" type="jp.co.gxp.domain.JobEntity">
+        <id property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="companyName" column="company_name"/>
+        <result property="japaneseLevel" column="japanese_level"/>
+        <result property="minSalary" column="min_salary"/>
+        <result property="maxSalary" column="max_salary"/>
+        <result property="location" column="location"/>
+        <result property="tag1" column="tag1"/>
+        <result property="tag2" column="tag2"/>
+        <result property="tag3" column="tag3"/>
+    </resultMap>
+    <resultMap id="ForeignRatio" type="jp.co.gxp.domain.ForeignRatioEntity">
+        <id property="foreignRatioId" column="ratio_id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="country" column="country"/>
+        <result property="foreignRatio" column="foreign_ratio"/>
+    </resultMap>
+    <resultMap id="JobDetail" type="jp.co.gxp.domain.JobDetailEntity">
+        <id property="jobDetailId" column="job_detail_id"/>
+        <result property="jobId" column="job_id"/>
+        <result property="benefits" column="benefits"/>
+        <result property="workDescription" column="work_description"/>
+        <result property="workHours" column="work_hours"/>
+        <result property="workRequirements" column="work_requirements"/>
+        <result property="workWelcome" column="work_welcome"/>
+        <result property="workTrialTime" column="work_trial_time"/>
+        <result property="workYearSalary" column="work_year_salary"/>
+        <result property="workGoodPoints" column="work_good_points"/>
+        <result property="workNeedPerson" column="work_need_person"/>
+        <result property="workEnvironment" column="work_environment"/>
+    </resultMap>
+    <resultMap id="JobImg" type="jp.co.gxp.domain.JobImgEntity">
+        <id property="imgId" column="job_img_id"/>
+        <result property="imgUrl" column="job_img" jdbcType="VARCHAR"/>
+        <result property="jobDetailId" column="job_detail_id"/>
+    </resultMap>
+    <resultMap id="CompanyJob" type="jp.co.gxp.domain.CompanyJobEntity">
+        <id property="jobId" column="job_id"/>
+        <result property="jobName" column="job_name"/>
+        <result property="companyName" column="company_name"/>
+        <result property="japaneseLevel" column="japanese_level"/>
+        <result property="minSalary" column="min_salary"/>
+        <result property="maxSalary" column="max_salary"/>
+        <result property="location" column="location"/>
+        <result property="tag1" column="tag1"/>
+        <result property="tag2" column="tag2"/>
+        <result property="tag3" column="tag3"/>
+        <result property="industryName" column="industry_name"/>
+        <result property="companyLogo" column="company_logo"/>
+    </resultMap>
+    <resultMap id="Skill" type="jp.co.gxp.domain.SkillEntity">
+        <id property="skillId" column="skill_id"/>
+        <result property="skillName" column="skill_name"/>
+    </resultMap>
+</mapper>

@@ -1,0 +1,37 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:16
+    platform: linux/amd64
+    container_name: gswork_postgresql
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_DB: gs_work
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      TZ: "Asia/Tokyo"
+    volumes:
+      - db-store:/var/lib/postgresql/data
+#  app:
+#    image: pokemon:latest
+#    container_name: pokemon_app
+#    ports:
+#      - "18080:8080"
+
+#  app:
+#    image: docker.io/library/backend:0.0.1-SNAPSHOT
+#    container_name: gs_work-app
+#    depends_on:
+#      - db
+#    ports:
+#      - "18080:8080"
+#    environment:
+#      SPRING_DATASOURCE_URL: jdbc:postgresql://db:15432/gs_work
+#      SPRING_DATASOURCE_USERNAME: root
+#      SPRING_DATASOURCE_PASSWORD: root
+
+
+volumes:
+  db-store:

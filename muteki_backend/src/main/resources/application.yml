@@ -1,0 +1,15 @@
+spring:
+  flyway:
+    baselineOnMigrate: true
+  datasource:
+    url: jdbc:postgresql://localhost:15432/gs_work
+    username: root
+    password: root
+    hikari:
+      pool-name: gs_workPool
+      maximum-pool-size: 2
+      driver-class-name: org.postgresql.Driver
+logging:
+  level:
+    ROOT: info
+    jp.co.gxp: debug

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="jp.co.gxp.infrastructure.mapper.MyPageMapper">
+    <sql id="select">
+        user_id,
+        user_name,
+        user_real_name,
+        user_birthday,
+        user_sex,
+        user_address,
+        user_address_detail,
+        user_tel,
+        user_email,
+        user_country,
+        user_zairyu_time,
+        user_japanese,
+        user_japanese_level,
+        user_work_status,
+        user_rireki_url
+    </sql>
+    <select id="fetchUserProfileById" resultMap="Profile">
+        select
+        <include refid="select"/>
+        FROM user_profile
+        WHERE user_id = #{userId}
+    </select>
+    <resultMap id="Profile" type="jp.co.gxp.domain.UserProfileEntity">
+        <id property="id" column="user_id"/>
+        <result property="name" column="user_name"/>
+        <result property="real_name" column="user_real_name"/>
+        <result property="birthday" column="user_birthday"/>
+        <result property="sex" column="user_sex"/>
+        <result property="address" column="user_address"/>
+        <result property="address_detail" column="user_address_detail"/>
+        <result property="tel" column="user_tel"/>
+        <result property="user_email" column="user_email"/>
+        <result property="country" column="user_country"/>
+        <result property="zairyu_time" column="user_zairyu_time"/>
+        <result property="japanese" column="user_japanese"/>
+        <result property="japanese_level" column="user_japanese_level"/>
+        <result property="work_status" column="user_work_status"/>
+        <result property="rireki_url" column="user_rireki_url"/>
+    </resultMap>
+</mapper>

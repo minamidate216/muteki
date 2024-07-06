@@ -1,0 +1,36 @@
+version: "3.7"
+
+services:
+  db:
+    image: postgres:16
+    platform: linux/amd64
+    container_name: gswork_postgresql
+    ports:
+      - "15432:5432"
+    environment:
+      POSTGRES_DB: gs_work
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+      TZ: "Asia/Tokyo"
+    volumes:
+      - db-store:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      timeout: 20s
+      retries: 10
+  app:
+    image: docker.io/library/muteki_backend:0.0.1-SNAPSHOT
+    container_name: gs_work_app
+    ports:
+     - "18080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: "jdbc:postgresql://db:5432/gs_work"
+      DB_USER: root
+      DB_PASS: root
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  db-store:

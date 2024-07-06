@@ -1,0 +1,754 @@
+openapi: 3.0.3
+info:
+  title: G's WorkのAPI
+  description: G's Workで使うAPIの仕様です
+  version: 1.0.0
+servers:
+  - url: http://localhost:8080/api
+tags:
+  - name: job
+paths:
+  /job/jobList:
+    get:
+      tags:
+        - job
+      summary: "(01)求人一覧"
+      description: |
+        全求人のリストを取得
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobsModel"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /job/{jobId}:
+    get:
+      tags:
+        - job
+      summary: "(02)求人詳細"
+      description: |
+        求人の詳細を取得
+      parameters:
+        - name: jobId
+          in: path
+          description: 求人ID
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobDetailModel"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /job/search:
+    get:
+      tags:
+        - job
+      summary: "(03)求人検索"
+      parameters:
+        - in: query
+          name: selectedJobNames
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+        - in: query
+          name: selectedSkills
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: スキルで検索
+        - in: query
+          name: selectedJapaneseLevel
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+        - in: query
+          name: selectedLocations
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+        - in: query
+          name: selectedSalary
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobsModel"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /job/search/more:
+    get:
+      tags:
+        - job
+      summary: "(04)詳細求人検索"
+      parameters:
+        - in: query
+          name: selectedJobNames
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: 職種で検索
+        - in: query
+          name: selectedSkills
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: スキルで検索
+        - in: query
+          name: selectedJapaneseLevel
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: 日本語レベルで検索
+        - in: query
+          name: selectedLocations
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: 勤務地で検索
+        - in: query
+          name: selectedSalary
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: 年収で検索
+        - in: query
+          name: selectedIndustry
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: 業界で検索
+        - in: query
+          name: selectedWorkExperience
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: 仕事経験で検索
+        - in: query
+          name: selectedEmployeeNum
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: 企業規模で検索
+        - in: query
+          name: selectedForeignCountries
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: 外国人国籍で検索
+        - in: query
+          name: selectedForeignRatio
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: 外国人比率で検索
+        - in: query
+          name: selectedPickyAbout
+          schema:
+            type: array
+            items:
+              type: string
+          required: false
+          description: こだわり条件で検索
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobsModel"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /job/isLogin/like:
+    post:
+      tags:
+        - job
+      summary: "(05) 求人いいね登録"
+      description: |
+        求人リストのいいねボタンを押すと
+        ＤＢに登録
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LikeRequest"
+      responses:
+        "200":
+          description: OK
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /job/isLogin/{jobId}:
+    delete:
+      tags:
+        - job
+      summary: "(06) お気に入り求人削除"
+      description: |
+        お気に入りから削除する
+      parameters:
+        - name: jobId
+          in: path
+          required: true
+          description: ID of the job to be deleted
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: OK
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /job/isLogin/likeJobList:
+    get:
+      tags:
+        - job
+      summary: "(07) お気に入った求人リストを取得"
+      description: |
+        お気に入った求人リストを取得
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  jobIds:
+                    type: array
+                    items:
+                      type: integer
+                    example:
+                      - 1
+                      - 2
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /users/me:
+    get:
+      tags:
+        - user
+      summary: "(01) ユーザ情報取得"
+      description: |
+        ユーザ情報を取得します。
+        ログインしている場合はユーザの名前を返却します
+        ログインしていない場合はauthenticated: falseを返却します
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserModel"
+  /item/skillList:
+    get:
+      tags:
+        - item
+      summary: "(01)スキルリストを取得"
+      description: |
+        skillリストを取得
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SkillsModel"
+        "404":
+          $ref: "#/components/responses/NotFound"
+  /users/signUp:
+    post:
+      tags:
+        - user
+      summary: "(02) アカウント登録"
+      description: |
+        メールアドレスとパスワードを入力し、登録
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserRequest"
+      responses:
+        "200":
+          description: OK
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+  /mypage/profile:
+    get:
+      tags:
+        - mypage
+      summary: "(01) プロフィール取得"
+      description: |
+        ユーザ情報を取得します。
+        バックエンドでUserIdを取得して
+        UserProfileテーブルから情報を取得
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserProfileModel"
+        "404":
+          $ref: "#/components/responses/NotFound"
+components:
+  responses:
+    NotFound:
+      description: Not NotFound
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponseModel"
+    BadRequest:
+      description: Bad Request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponseModel"
+    Unauthorized:
+      description: Unauthorized(未認証)
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponseModel"
+  schemas:
+    ErrorResponseModel:
+      type: object
+      properties:
+        code:
+          type: string
+          example: 40x
+        message:
+          type: string
+          example: detail of the error
+      required:
+        - code
+        - message
+    JobModel:
+      type: object
+      properties:
+        job_id:
+          description: 求人ＩＤ
+          type: integer
+          example: 1
+        job_name:
+          description: 職位名
+          type: string
+          example: "デザイナー"
+        company_name:
+          description: 会社名
+          type: string
+          example: "GxP"
+        japanese_level:
+          description: 日本語レベル
+          type: integer
+          example: 1
+        min_salary:
+          description: 最低給与
+          type: integer
+          example: 150000
+        max_salary:
+          description: 最高給与
+          type: integer
+          example: 500000
+        location:
+          description: 勤務地
+          type: string
+          example: "東京都"
+        tag1:
+          description: タグ1
+          type: string
+          example: "サンプル1"
+        tag2:
+          description: タグ2
+          type: string
+          example: "サンプル2"
+        tag3:
+          description: タグ3
+          type: string
+          example: "サンプル3"
+        foreign_ratio:
+          description: 外国人比率
+          type: double
+          example: 0.5
+      required:
+        - job_id
+        - job_name
+        - company_name
+        - japanese_level
+        - min_salary
+        - max_salary
+        - location
+        - tag1
+        - tag2
+        - tag3
+        - foreign_ratio
+    JobsModel:
+      type: object
+      properties:
+        jobs:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobModel"
+          example:
+            - job_id: 1
+              job_name: "ソフトウェアエンジニア"
+              company_name: "テックコープ"
+              japanese_level: 3
+              min_salary: 5000000
+              max_salary: 7000000
+              location: "東京"
+              tag1: "IT"
+              tag2: "フルタイム"
+              tag3: "開発"
+              foreign_ratio: 0.4
+            - job_id: 2
+              job_name: "マーケティングスペシャリスト"
+              company_name: "ビズマーケット"
+              japanese_level: 2
+              min_salary: 4000000
+              max_salary: 5500000
+              location: "大阪"
+              tag1: "マーケティング"
+              tag2: "フルタイム"
+              tag3: "広告"
+              foreign_ratio: 0.5
+
+      required:
+        - jobs
+    JobDetailModel:
+      type: object
+      properties:
+        job_id:
+          description: 求人ID
+          type: integer
+          example: 1
+        benefits:
+          description: 福利厚生
+          type: string
+          example: "ジュース無料"
+        work_description:
+          description: 仕事内容
+          type: string
+          example: "仕事内容を記載"
+        work_hours:
+          description: 勤務時間
+          type: string
+          example: "フレックスタイム制"
+        work_requirements:
+          description: 応募条件
+          type: string
+          example: "Java2年"
+        work_welcome:
+          description: 歓迎条件
+          type: string
+          example: "英語を話せる"
+        work_trial_time:
+          description: 試用期間
+          type: string
+          example: "3か月"
+        work_year_salary:
+          description: 年収
+          type: string
+          example: "200～300万円"
+        work_good_points:
+          description: 会社のいいポイント
+          type: string
+          example: "ただ飯"
+        work_need_person:
+          description: 求める人物像
+          type: string
+          example: "明るいJavaマスター"
+        work_environment:
+          description: 開発環境
+          type: string
+          example: "Spring Boot, Vue.js, React, Postgresql"
+        industry:
+          description: 業界
+          type: string
+          example: "建設"
+        skills:
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillModel"
+          example:
+            - skill_id: 1
+              skill_name: "Java"
+            - skill_id: 2
+              skill_name: "Vue"
+        imgs:
+          type: array
+          items:
+            $ref: "#/components/schemas/JobImgModel"
+          example:
+            - img_id: 1
+              img_url: "https://www.sample.png"
+              job_id: 1
+            - img_id: 2
+              img_url: "https://www.minamidate.png"
+              job_id: 2
+        job_in_card:
+          $ref: "#/components/schemas/JobModel"
+          example:
+            - job_id: 1
+              job_name: "ソフトウェアエンジニア"
+              company_name: "テックコープ"
+              japanese_level: 3
+              min_salary: 5000000
+              max_salary: 7000000
+              location: "東京"
+              tag1: "IT"
+              tag2: "フルタイム"
+              tag3: "開発"
+              foreign_ratio: 0.4
+        foreign_ratios:
+          type: array
+          items:
+            $ref: "#/components/schemas/ForeignRatioModel"
+      required:
+        - job_id
+        - benefits
+        - work_description
+        - work_hours
+        - work_requirements
+        - work_welcome
+        - work_trial_time
+        - work_year_salary
+        - work_good_points
+        - work_need_person
+        - work_environment
+        - industry
+        - skills
+        - imgs
+        - job_in_card
+        - foreign_ratios
+    JobImgModel:
+      type: object
+      properties:
+        img_id:
+          description: 求人画像ID
+          type: integer
+          example: 1
+        img_url:
+          description: 求人画像URL
+          type: string
+          example: "https://www.sample.png"
+        job_id:
+          description: 求人ID
+          type: integer
+          example: 1
+      required:
+        - img_id
+        - img_url
+        - job_id
+    SkillModel:
+      type: object
+      properties:
+        skill_id:
+          description: スキルID
+          type: integer
+          example: 1
+        skill_name:
+          description: スキル
+          type: string
+          example: "Java"
+      required:
+        - skill_id
+        - skill_name
+    SkillsModel:
+      type: object
+      properties:
+        skills:
+          description: skill
+          type: array
+          items:
+            $ref: "#/components/schemas/SkillModel"
+          example:
+            - skill_id: 1
+              skill_name: "Java"
+            - skill_id: 2
+              skill_name: "Python"
+      required:
+        - skills
+    ForeignRatioModel:
+      type: object
+      properties:
+        foreign_ratio_id:
+          description: 外国人比率ID
+          type: integer
+          example: 2
+        foreign_ratio:
+          description: 外国人比率
+          type: double
+          example: 0.45
+        country:
+          description: 国籍
+          type: string
+          example: "ウズベキスタン"
+      required:
+        - foreign_ratio_id
+        - foreign_ratio
+        - country
+    UserModel:
+      type: object
+      properties:
+        user_email:
+          description: ユーザ名(認証済みの場合のみ設定)
+          type: string
+          example: "1@1.com"
+        is_authenticated:
+          description: 認証済みかどうか
+          type: boolean
+          example: false
+      required:
+        - is_authenticated
+    UserRequest:
+      type: object
+      properties:
+        email:
+          description: ユーザーEmail
+          type: string
+          example: "1@1.com"
+        password:
+          description: パスワード
+          type: string
+          example: password
+      required:
+        - email
+        - password
+    UserProfileModel:
+      type: object
+      properties:
+        id:
+          description: ユーザのID
+          type: integer
+          example: 1
+        name:
+          description: ユーザの氏名
+          type: string
+          example: "オタベク"
+        real_name:
+          description: フリガナ/アルファベット
+          type: string
+          example: "Otabek"
+        birthday:
+          description: 生年月日
+          type: string
+          format: date
+          example: "1999/05/28"
+        sex:
+          description: 性別
+          type: integer
+          example: 1
+        address:
+          description: 住所（都道府県）
+          type: string
+          example: "東京都荒川区1-11-11"
+        address_detail:
+          description: 住所（詳細）
+          type: string
+          example: "河合ビル202号室"
+        tel:
+          description: 電話番号
+          type: string
+          example: "08068737421"
+        user_email:
+          description: 連絡用メールアドレス
+          type: string
+          example: "1@1.com"
+        country:
+          description: 国籍
+          type: string
+          example: "ベトナム"
+        zairyu_time:
+          description: 在留期間
+          type: string
+          format: date
+          example: "2033/03/11"
+        japanese:
+          description: 日本語レベル
+          type: string
+          example: "日常会話"
+        japanese_level:
+          description: 日本語資格（取得した）
+          type: integer
+          example: 2
+        work_status:
+          description: 就業状況
+          type: string
+          example: "未就職"
+        rireki_url:
+          description: 履歴書ファイルURL
+          type: string
+          example: "/pdf/rireki_otabek.pdf"
+      required:
+        - id
+        - name
+        - real_name
+        - birthday
+        - sex
+        - address
+        - address_detail
+        - tel
+        - user_email
+        - country
+        - zairyu_time
+        - japanese
+        - japanese_level
+        - work_status
+        - rireki_url
+    LikeRequest:
+      type: object
+      properties:
+        jobId:
+          description: 求人Id
+          type: integer
+          example: 1
+      required:
+        - jobId
